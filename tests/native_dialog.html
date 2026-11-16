@@ -1,0 +1,15 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Native dialog</title></head>
+<body>
+<!-- Diner Detective shape (31.10): a native <dialog> opened with showModal() and no role attribute. The page behind it is
+     inert, so its buttons are not moves; the dialog's own text and buttons are. -->
+<main id="room">
+  <p>The dining room after closing.</p>
+  <button onclick="document.getElementById('room').insertAdjacentHTML('beforeend','<p>BEHIND THE MODAL</p>')">+ The jukebox</button>
+</main>
+<dialog id="modal">
+  <p>Pull up a chair. June needs help with the checks.</p>
+  <button onclick="document.getElementById('modal').close();document.getElementById('room').innerHTML='<p>June smiles. THE END.</p>'">Help June with the checks</button>
+</dialog>
+<script>document.getElementById('modal').showModal();</script>
+</body></html>

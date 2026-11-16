@@ -1,0 +1,11 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Dead link</title></head>
+<body>
+<!-- «Look around» does nothing; «Open the door» ends the story. Played by «always the first offered choice». -->
+<tw-story><tw-passage id="p">
+<div>A locked room. A door.</div>
+<a href="javascript:void 0" class="link-internal" style="display:inline-block;width:20px;height:20px" onclick="document.getElementById('p').textContent='The icon was a trapdoor. You fall into the sea. THE END.'"></a>
+<tw-link style="display:block" onclick="void 0">Look around</tw-link>
+<tw-link style="display:block" onclick="document.getElementById('p').innerHTML='Chapter one.<br><a href=\'javascript:void 0\' onclick=\'document.getElementById(&quot;p&quot;).textContent=&quot;The door opens onto the sea. THE END.&quot;\'><img src=\'act1.png\' width=40 height=20></a>'">Open the door</tw-link>
+</tw-passage></tw-story>
+</body></html>

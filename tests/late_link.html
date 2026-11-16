@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Late link</title></head>
+<body>
+<!-- The passage's only link appears 3 s after the click that led here (a timed reveal). -->
+<div id="passages"><div class="passage" id="p">
+  <div>The fire is lit.</div>
+  <button class="link-internal macro-button" onclick="document.getElementById('p').textContent='You chose the long way. THE END.'">You tilt your head in a sign of acknowledgement, saying nothing, because whatever you could say now would only make the silence between the two of you heavier than it already is tonight.</button>
+  <a href="javascript:void 0" class="link-internal" onclick="
+    var p=document.getElementById('p'); p.innerHTML='<div>She speaks slowly...</div>';
+    setTimeout(function(){ var a=document.createElement('a'); a.className='link-internal'; a.href='javascript:void 0';
+      a.textContent='Listen'; a.onclick=function(){ p.textContent='She tells you everything. THE END.'; }; p.appendChild(a); }, 3000);">Sit down</a>
+</div></div>
+</body></html>

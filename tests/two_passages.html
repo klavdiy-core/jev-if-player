@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Two passages</title></head>
+<body>
+<!-- A planted two-passage story in the shape Twine (Harlowe) gives a page: one tw-passage, links as tw-link. -->
+<tw-story><tw-passage id="p"></tw-passage></tw-story>
+<script>
+const P = {
+  start: {text: "You wake in a lighthouse. The lamp is dark.", links: [["Climb the stairs", "top"], ["Go back to sleep", "sleep"]]},
+  top: {text: "At the top, you light the lamp. A ship turns toward shore. THE END.", links: []},
+  sleep: {text: "You sleep. The ship hits the rocks. THE END.", links: []}
+};
+function show(name) {
+  const p = P[name], el = document.getElementById('p');
+  el.textContent = '';
+  const t = document.createElement('div'); t.textContent = p.text; el.appendChild(t);
+  for (const [label, to] of p.links) {
+    const l = document.createElement('tw-link'); l.textContent = label; l.style.display = 'block'; l.style.cursor = 'pointer';
+    l.addEventListener('click', () => show(to)); el.appendChild(l);
+  }
+}
+show('start');
+</script>
+</body></html>

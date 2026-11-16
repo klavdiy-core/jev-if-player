@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Hidden main</title></head>
+<body>
+<!-- Diner Detective shape (31.10): the game lives in <main>, hidden behind a title screen that is a SIBLING of <main>.
+     The visible title buttons must be offered; a hidden <main> is not the story. -->
+<section id="title-screen">
+  <h1>NIGHT DINER</h1>
+  <p>June saved you the last table.</p>
+  <button id="new-game" onclick="document.getElementById('title-screen').style.display='none';document.getElementById('game').style.display='block'">Take the night shift</button>
+</section>
+<main id="game" style="display:none">
+  <section class="play-area"><p>The coffee is black. A stranger waits at the counter. THE END.</p></section>
+</main>
+</body></html>

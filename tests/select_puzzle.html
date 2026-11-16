@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Select puzzle</title></head>
+<body>
+<!-- Diner Detective shape (31.10): a logic puzzle answered with <select> dropdowns inside a modal, then «Submit answer». -->
+<main id="room"><p>The diner.</p></main>
+<dialog id="modal">
+  <p>Give each customer one meal. Nora ordered the only sweet meal.</p>
+  <label>Nora <select id="nora"><option value="">Choose…</option><option value="pie">Pie</option><option value="stew">Stew</option></select></label>
+  <label>Luis <select id="luis" aria-label="Luis"><option value="">Choose…</option><option value="pie">Pie</option><option value="stew">Stew</option></select></label>
+  <p id="fb" role="status"></p>
+  <button onclick="if (document.getElementById('nora').value==='pie' && document.getElementById('luis').value==='stew') { document.getElementById('modal').close(); document.getElementById('room').innerHTML='<p>Solved. June pours coffee. THE END.</p>'; } else { document.getElementById('fb').textContent='Not quite.'; }">Submit answer</button>
+</dialog>
+<script>document.getElementById('modal').showModal();</script>
+</body></html>

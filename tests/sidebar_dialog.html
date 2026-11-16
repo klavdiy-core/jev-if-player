@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sidebar and dialog</title></head>
+<body>
+<!-- SugarCube shape: a sidebar link that does nothing, the story in #passages, a codex dialog with an in-story «Back». -->
+<div id="side"><a href="javascript:void 0" class="link-internal">Game Title</a></div>
+<div id="passages"><div class="passage" id="p">
+  <div>The inn is quiet.</div>
+  <a href="javascript:void 0" class="link-internal" onclick="document.getElementById('dlg').style.display='block'">Codex</a>
+</div></div>
+<div id="dlg" role="dialog" style="display:none">
+  <div>Lord Rezan, the Sorcerer.</div>
+  <a href="javascript:void 0" class="link-internal" onclick="document.getElementById('dlg').style.display='none';document.getElementById('p').textContent='You leave the inn. THE END.'">Back</a>
+</div>
+</body></html>

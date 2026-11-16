@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Codex loop</title></head>
+<body>
+<!-- «Continue» on every page (looks like a menu), a codex page with «Return». The run must go on past the codex. -->
+<div id="passages"><div class="passage" id="p"></div></div>
+<script>
+let n = 0;
+function page(i) {
+  const p = document.getElementById('p'); p.innerHTML = '';
+  const t = document.createElement('div'); t.textContent = i >= 6 ? 'The road ends at the sea. THE END.' : 'Chapter ' + i + '.'; p.appendChild(t);
+  if (i >= 6) return;
+  if (i === 4) { const c = document.createElement('a'); c.className = 'link-internal'; c.textContent = 'Codex'; c.href = 'javascript:void 0';
+    c.onclick = () => { p.innerHTML = '<div>Codex: the Sorcerer.</div>'; const r = document.createElement('a'); r.className = 'link-internal';
+      r.textContent = 'Return'; r.href = 'javascript:void 0'; r.onclick = () => page(4); p.appendChild(r); }; p.appendChild(c); }
+  const a = document.createElement('a'); a.className = 'link-internal'; a.textContent = 'Continue'; a.href = 'javascript:void 0';
+  a.onclick = () => page(i + 1); p.appendChild(a);
+}
+page(0);
+</script>
+</body></html>
