@@ -202,6 +202,14 @@ class EndToEnd(unittest.TestCase):
             rep = open(r["report"], encoding="utf-8").read()
             self.assertIn("more than one button could be Submit («Submit answer», «Check answers»): the tester pressed none", rep)
 
+    def test_every_run_starts_without_the_games_saved_progress(self):
+        page = os.path.join(HERE, "saved_progress.html")
+        with tempfile.TemporaryDirectory() as d:
+            for name in ("first", "second"):
+                jp.play(page, name, turns=1, out=d, chooser=first_choice, ender=ender, log=lambda *_: None)
+            first_page = [json.loads(x) for x in open(os.path.join(d, "second", "turns.jsonl"), encoding="utf-8")][0]
+        self.assertIn("Visits before this one: 0.", first_page["passage"])   # the first run's save did not carry over
+
     def test_the_log_keeps_the_games_answer_to_a_click_that_changed_the_page_in_place(self):
         with tempfile.TemporaryDirectory() as d:
             r = jp.play(os.path.join(HERE, "answer_in_place.html"), "place", turns=1, out=d, chooser=first_choice,

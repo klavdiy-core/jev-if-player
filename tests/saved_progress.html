@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>A game that remembers the last visit</title></head>
+<body>
+<!-- Diner Detective shape: the game saves progress in the browser, so a second playtest in the same Chrome profile
+started where the first one left. A blind first-time reader must start fresh every run. -->
+<main id="room"><p id="seen"></p><p>The diner is closed.</p>
+<button onclick="document.getElementById('room').innerHTML='<p>THE END.</p>'">Leave</button></main>
+<script>
+  var n = parseInt(localStorage.getItem('visits') || '0', 10);
+  document.getElementById('seen').textContent = 'Visits before this one: ' + n + '.';
+  localStorage.setItem('visits', String(n + 1));
+</script>
+</body></html>

@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -228,6 +229,15 @@ class Tab:
         self.send("Page.navigate", url=url)
         wait_ready(self)
 
+    def goto_fresh(self, url):
+        """Open a game page with nothing it saved before: a game that keeps progress in the browser (localStorage,
+        IndexedDB, cookies) would start where the last playtest in this profile left (a Diner Detective run opened
+        with two answers from the run before). The page's own origin is cleared before it loads."""
+        p = urllib.parse.urlsplit(url)
+        origin = "file://" if p.scheme == "file" else f"{p.scheme}://{p.netloc}"
+        self.send("Storage.clearDataForOrigin", origin=origin, storageTypes="all")
+        self.goto(url)
+
     def close(self):
         try:
             self.ws.close()
@@ -384,11 +394,11 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
             url = Path(url).resolve().as_uri()
         tab = Tab("about:blank")
         tab.send("Page.enable")
-        tab.goto(url)
+        tab.goto_fresh(url)
         game = itch_game_url(tab) if "itch.io" in url else None
         if game:
             log(f"itch.io game frame: {game}")
-            tab.goto(game)
+            tab.goto_fresh(game)                  # the game's own origin keeps its saves, not itch.io's
     moods, moves, rows = [], [], []
     past, ending, same = "YOUR LAST MOVE: none yet.", "turn limit", 0
     first_text, game_title = "", ""
