@@ -267,7 +267,7 @@ def itch_game_url(tab):
 
 def read(tab):
     # a background tab gets throttled timers: Harlowe's (prompt:) dialog never came up while two games ran side by side
-    # (Scout r2, r3, 25.10) and the run looked stuck. The tab is brought to the front before every look; runs go one at a time.
+    # (two test runs) and the run looked stuck. The tab is brought to the front before every look; runs go one at a time.
     try:
         tab.send("Page.bringToFront")
     except Exception:
@@ -302,7 +302,7 @@ def state_text(page, past, moods, turn, seen_before=0, clicked_here=()):
 
 def ask_jev(state, choices, may_stop=True):
     """may_stop: the «stop» option is offered only after the session's minimum (a paid playtest promises N turns;
-    Scout r2 stopped at turn 3 on a page whose «OK» had not loaded yet)."""
+    one test run stopped at turn 3 on a page whose «OK» had not loaded yet)."""
     import jev
     opts = choices + ([STOP] if may_stop else [])
     q = {"move": {"type": "choice", "instructions": "You are reading this story and want to see where it goes. "
@@ -310,7 +310,7 @@ def ask_jev(state, choices, may_stop=True):
          "mood": {"type": "choice", "instructions": "What do you feel right now in this game?", "criteria": MOODS},
          "strength": {"type": "score", "instructions": "How strongly do you feel it?", "criteria": STRENGTH},
          "cause": {"type": "choice", "instructions": "What is this feeling from?", "criteria": CAUSES},
-         # attention measured, not inferred from the feeling (Scout r4 gave zero inferred drops in 60 turns)
+         # attention measured, not inferred from the feeling (inferring it from the feeling found zero drops in a 60-turn run)
          "want": {"type": "score", "instructions": "How much do you want to keep reading this story right now?",
                   "criteria": WANT}}
     a = jev.call({"state": state, "questions": q})["answers"]
