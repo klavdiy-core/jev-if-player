@@ -202,6 +202,16 @@ class EndToEnd(unittest.TestCase):
             rep = open(r["report"], encoding="utf-8").read()
             self.assertIn("more than one button could be Submit («Submit answer», «Check answers»): the tester pressed none", rep)
 
+    def test_the_log_keeps_the_games_answer_to_a_click_that_changed_the_page_in_place(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = jp.play(os.path.join(HERE, "answer_in_place.html"), "place", turns=1, out=d, chooser=first_choice,
+                        ender=ender, log=lambda *_: None)
+            turns = [json.loads(x) for x in open(os.path.join(d, "place", "turns.jsonl"), encoding="utf-8")]
+            self.assertEqual(turns[0]["picked"], "Ask June")
+            self.assertIn("Nora always has the pie", turns[0]["after"])          # the game's answer to the click
+            self.assertNotIn("A SMALL FAVOR", turns[0]["after"])                 # not the page's top
+            self.assertIn("June waits for you to ask", turns[0]["after_gone"])   # and what the click replaced
+
     def test_with_a_list_still_open_the_tester_never_presses_for_him(self):
         def always_hint(state, choices, may_stop=True):
             return choices.index("Hint"), "interest", "noticeably", "text", 0.9
@@ -475,6 +485,17 @@ class Offline(unittest.TestCase):
     def test_new_part_is_what_the_click_added(self):
         self.assertEqual(jp.new_part("You wake.", "You wake. The lamp is lit."), "The lamp is lit.")
         self.assertEqual(jp.new_part("Old page.", "A new page."), "A new page.")
+
+    def test_new_part_of_a_page_changed_in_place_is_the_changed_line_not_the_page_top(self):
+        head = "01 · A SMALL FAVOR\n" + "The mixed-up checks, a long header line. " * 12
+        before = head + "\nJune waits for you to ask.\nThe clock says ten past eleven."
+        after = head + "\nJune: Nora always has the pie.\nThe clock says ten past eleven."
+        self.assertEqual(jp.new_part(before, after), "June: Nora always has the pie.")
+        # a text that only lost lines (a dialog closed) says what went, never the page top
+        self.assertEqual(jp.new_part(before, head + "\nThe clock says ten past eleven."), "")
+        self.assertEqual(jp.gone_part(before, head + "\nThe clock says ten past eleven."), "June waits for you to ask.")
+        # a line said once more is new once (the same answer twice in a row)
+        self.assertEqual(jp.new_part("Q\nNot quite.\nEnd", "Q\nNot quite.\nNot quite.\nEnd"), "Not quite.")
 
     def test_strict_repeats_count_only_the_same_choice_on_the_same_page(self):
         rows = [{"page_key": "s", "picked": "Codex"}, {"page_key": "c", "picked": "Return"},

@@ -340,9 +340,36 @@ def save_row(run, row):
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def _line_diff(a, b):
+    """Lines of b that a does not hold (counted: a line repeated twice in b and once in a is new once), in b's order."""
+    left = {}
+    for x in (s.strip() for s in a.splitlines()):
+        if x:
+            left[x] = left.get(x, 0) + 1
+    out = []
+    for x in (s.strip() for s in b.splitlines()):
+        if not x:
+            continue
+        if left.get(x):
+            left[x] -= 1
+        else:
+            out.append(x)
+    return "\n".join(out)
+
+
 def new_part(before, after):
-    """The text the click added: Harlowe and some SugarCube pages append to the passage instead of replacing it."""
-    return after[len(before):].strip() if after.startswith(before) and len(after) > len(before) else after.strip()
+    """The text the click added. Harlowe and some SugarCube pages append to the passage: then it is the tail. Other games
+    change the page in place, under a header that stays (a puzzle's answer line, a dialog): then it is the lines that
+    were not on the page before — never the page's top, which is what a cut of the whole page kept (in one Diner Detective
+    run 27 of 40 logged answers were its header)."""
+    if after.startswith(before) and len(after) > len(before):
+        return after[len(before):].strip()
+    return _line_diff(before, after)
+
+
+def gone_part(before, after):
+    """The lines the click took off the page (a status line replaced, a dialog closed)."""
+    return _line_diff(after, before)
 
 
 def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=print, min_turns=0):
@@ -445,8 +472,9 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
             wait_ready(tab, settle=1.6, limit=8)          # 0.8 s read Scout's pronoun page before its «OK» appeared
             after = read(tab)
             changed = (after["text"], after["choices"]) != (page["text"], page["choices"])   # a dialog changes the choices
-            # what the click gave: the new page's opening, for «promised vs got» in the attention section
+            # what the click gave (the game's answer: new lines, not the page top), for «promised vs got»
             row["after"] = new_part(page["text"], after["text"])[:400] if changed else ""
+            row["after_gone"] = gone_part(page["text"], after["text"])[:400] if changed else ""
             save_row(run, row)
             same = 0 if changed else same + 1
             past = f"YOUR LAST MOVE: «{row['picked']}» -> the page {'changed' if changed else 'did NOT change'}."

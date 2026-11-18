@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The answer appears in the middle of the page</title></head>
+<body>
+<!-- Diner Detective shape: the page does not grow at its end; a click changes text in place, below a long
+header that stays. The log must keep what the click changed, not the first 400 characters of the page. -->
+<main id="room">
+  <h1>01 · A SMALL FAVOR</h1>
+  <p>The mixed-up checks. Four regulars, four suppers, and a gust of wind through the door that sent every ticket
+  flying across the floor of the diner just after closing time, when June was already stacking the chairs and the rain
+  on Route 9 had turned the parking lot into a mirror for the neon sign that still buzzed above the counter.</p>
+  <p>Nora sits by the window. Luis sits at the counter. Ada and Ben share the corner booth and argue about the jukebox,
+  which has played the same three songs since nineteen seventy-one and will play them again tomorrow night.</p>
+  <p id="june" role="status">June waits for you to ask.</p>
+  <p>The clock on the wall says ten past eleven.</p>
+  <button onclick="document.getElementById('june').textContent='June: Nora always has the pie. Always.';">Ask June</button>
+  <button onclick="document.getElementById('june').textContent='June: Luis never touches anything sweet.';">Ask again</button>
+</main>
+</body></html>
