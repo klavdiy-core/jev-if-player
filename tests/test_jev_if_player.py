@@ -116,12 +116,12 @@ class EndToEnd(unittest.TestCase):
             self.assertIn("Choose «Stew» for Luis", first)
             self.assertNotIn("Choose «Choose…» for Nora", first)              # the placeholder is no move
             self.assertIn("Nora: Pie", r["rows"][1]["passage"])                # the state he set is shown back
-            # a select's own innerText is every option: four lists repeated drowned the clues (Diner run 3)
+            # a select's own innerText is every option: four lists repeated drowned the clues (seen in a Diner Detective run)
             self.assertNotIn("Choose…", r["rows"][0]["passage"])
             self.assertIn("June pours coffee", open(r["report"], encoding="utf-8").read())
 
     def test_when_every_list_is_answered_the_submit_button_is_named_in_the_passage(self):
-        # Diner run 4 (31.10): all four answers right at turn 19, then hints, never Submit. A person SEES that every list is
+        # In a Diner Detective run all four answers right at turn 19, then hints, never Submit. A person SEES that every list is
         # filled and the Submit button; the passage says the same, and only when it is true
         plan = ["Choose «Pie» for Nora", "Choose «Stew» for Luis", "Submit answer"]
 
@@ -137,7 +137,7 @@ class EndToEnd(unittest.TestCase):
 
     def test_when_every_list_is_answered_and_he_turns_away_the_tester_presses_submit_and_says_so(self):
         # The promise to the Diner Detective author: «Next time, our tester will press Submit».
-        # The passage line (f6e54aa) did not move Jev (run 5). So the tester presses it once for that set of answers, and the
+        # The passage line (f6e54aa) did not move Jev (a later run). So the tester presses it once for that set of answers, and the
         # row says it was the tester, with what Jev picked instead: the report must not claim Jev pressed it.
         plan = ["Choose «Pie» for Nora", "Choose «Stew» for Luis"]
 

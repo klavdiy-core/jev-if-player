@@ -129,7 +129,7 @@ READ_JS = r"""
   sels.forEach((s, i) => { s.style.display = prevDisp[i]; });
   // a select's own text is every option; what he needs is what is chosen now
   if (states.length) shownText += '\n\nYour current answers: ' + states.join(' · ');
-  // every list answered + a submit-like button on offer: say so, as a person would see it (Diner run 4: 4/4 right, never submitted)
+  // every list answered + a submit-like button on offer: say so, as a person would see it (seen in a Diner Detective run: 4/4 right, never submitted)
   // the button that checks the answers, in its strict form only: «Check the window», «Answer the phone», «Done reading» are
   // moves in a story (found in review). More than one such button = not guessed: the tester presses none and says so.
   const SUBMIT = /^(submit|check|confirm|done)(\s+(my|the|your))?(\s+(answers?|solution|guess))?$/i;
@@ -188,7 +188,7 @@ def repeats(rows):
 
 def repeats_strict(rows):
     """The plain sense of «a repeated move»: the same choice clicked again on the same page. A «Return» from a codex
-    entry read for the first time lands on a seen page and counts in repeats(), not here (Tale of Crowns r4: 12 vs 2)."""
+    entry read for the first time lands on a seen page and counts in repeats(), not here (seen in a Tale of Crowns run: 12 vs 2)."""
     done, rep = set(), 0
     for r in rows:
         k = (r.get("page_key"), r["picked"])
@@ -279,7 +279,7 @@ def click(tab, i):
     tab.eval(f"window.__jevChoices[{i}].scrollIntoView({{block:'center'}}); window.__jevChoices[{i}].click(); true")
 
 
-FEEL_LINE = [False]  # A/B 25.10, Tale of Crowns, one run each: with «LAST TURN YOU SAID YOU FELT ... in a row» 3 distinct feelings, longest run 47, 2 changes; without it 8, 11, 28. Off by default.
+FEEL_LINE = [False]  # A/B 25.10, Tale of Crowns, one run each: with «LAST TURN YOU SAID YOU FELT ... in a row» 3 distinct feelings, longest streak 47, 2 changes; without it 8, 11, 28. Off by default.
 
 
 def state_text(page, past, moods, turn, seen_before=0, clicked_here=()):
@@ -361,7 +361,7 @@ def new_part(before, after):
     """The text the click added. Harlowe and some SugarCube pages append to the passage: then it is the tail. Other games
     change the page in place, under a header that stays (a puzzle's answer line, a dialog): then it is the lines that
     were not on the page before — never the page's top, which is what a cut of the whole page kept (in one Diner Detective
-    run 27 of 40 logged answers were its header)."""
+    run, 27 of 40 logged answers were its header)."""
     if after.startswith(before) and len(after) > len(before):
         return after[len(before):].strip()
     return _line_diff(before, after)
@@ -425,7 +425,7 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
             # a choice he already clicked on this very page did nothing new that time; a person sees that and does not
             # press it again (Zorlok, 25.10: one radio 50 times). The menu rule above, then this; never down to zero.
             # «not clicked here» outranks «not a menu»: «Continue» sits on every page and looks like a menu; dropping it
-            # left only the codex he had opened, and Tale of Crowns r3 looped Codex <-> Return for 30 turns (25.10)
+            # left only the codex he had opened, and a Tale of Crowns run looped Codex <-> Return for 30 turns (25.10)
             ch = page["choices"]
             offer = [i for i, c in enumerate(ch) if c not in menu and c not in here] \
                 or [i for i, c in enumerate(ch) if c not in here] \
