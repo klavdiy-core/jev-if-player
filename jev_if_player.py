@@ -390,7 +390,7 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
                 break
             key = (page["text"], tuple(page["choices"]))
             # a button that sits on 4+ different pages is the game's menu (a profile, stats), not a story move: after he
-            # has opened it once it leaves his options — Scout, 25.10: «PROFILE / RETURN TO STORY» took 26 of 60 turns
+            # has opened it once it leaves his options — in Scout: «PROFILE / RETURN TO STORY» took 26 of 60 turns
             for c in page["choices"]:
                 pages_with.setdefault(c, set()).add(key)
             here = clicked.setdefault(key, [])
@@ -543,7 +543,7 @@ def sparkline(rows):
 DIP_MARGIN = 0.1   # a dip must be this far under the bar: 0.02 under it on pronoun pages was noise (King's Hound 5, 11)
 SETUP = re.compile(r"\b(she/her|he/him|they/them|xe/xem|pronouns?|gender|nonbinary|cisgender|transgender|"
                    r"male|female|man|woman|name|mentions? of|content warnings?|explicit|start over|settings|"
-                   r"audio descriptions?)\b", re.I)   # Scout 6: «YES/NO to mentions of physical sex» is a setting
+                   r"audio descriptions?)\b", re.I)   # in Scout: «YES/NO to mentions of physical sex» is a setting
 
 
 def is_setup(row):

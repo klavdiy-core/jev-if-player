@@ -298,7 +298,7 @@ class Offline(unittest.TestCase):
         return rows
 
     def test_S1_a_dip_episode_is_measured_against_its_whole_range(self):
-        w = [2.6] * 40 + [2.3, 1.7, 2.3, 1.8, 2.4, 2.0, 2.6] + [2.6] * 13       # Scout r5, turns 41-47
+        w = [2.6] * 40 + [2.3, 1.7, 2.3, 1.8, 2.4, 2.0, 2.6] + [2.6] * 13       # a real run of Scout, turns 41-47
         d = jp.attention_drops(self.wrows(w), "turn limit")
         self.assertEqual(len(d), 1, [x["turns"] for x in d])
         self.assertEqual((d[0]["turns"][0], d[0]["turns"][-1]), (42, 46))
