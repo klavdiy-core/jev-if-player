@@ -394,8 +394,11 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
             url = Path(url).resolve().as_uri()
         tab = Tab("about:blank")
         tab.send("Page.enable")
-        tab.goto_fresh(url)
-        game = itch_game_url(tab) if "itch.io" in url else None
+        on_itch = "itch.io" in url
+        # itch.io's own page holds no game saves (the game runs in its own frame origin) but may hold a login:
+        # it is opened as it is; only the game's origin is cleared (review 18.11)
+        tab.goto(url) if on_itch else tab.goto_fresh(url)
+        game = itch_game_url(tab) if on_itch else None
         if game:
             log(f"itch.io game frame: {game}")
             tab.goto_fresh(game)                  # the game's own origin keeps its saves, not itch.io's
