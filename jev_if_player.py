@@ -700,10 +700,14 @@ def attention_drops(rows, ending="", n=5):
             if end_sig in merged:
                 main = end_sig
         kind = "navigation" if main in NAV else "story"
+        # the end names the place, but «he chose to stop» is no advice: the fix comes from what else happened there
+        # (Diner Detective: «Fix first: he chose to stop reading here», v2 author report, 18.11)
+        fix_sig = max((s for s in merged if s != "stop_end"), key=merged.get, default=main) \
+            if main == "stop_end" else main
         plen = r.get("passage_len") or len(r["passage"])
         # the slipping feeling may sit on a neighbour of the lowest-wish turn (Underfell 42-47 printed «look here»)
         fmood = next((rows[i]["mood"] for i in idx if rows[i]["mood"] in DROP), r["mood"])
-        dipped = bool({"want_fell", "want_low"} & set(merged)) and main not in NAV | {"stop_end", "stuck_end"}
+        dipped = bool({"want_fell", "want_low"} & set(merged)) and fix_sig not in NAV | {"stop_end", "stuck_end"}
         if dipped:
             # a measured dip takes its fix from the reason he named, not from the feeling label (King's Hound
             # 30, cause «the writing», mood confusion -> the fix said «unclear choices»); an unsure reason is said so
@@ -718,7 +722,7 @@ def attention_drops(rows, ending="", n=5):
                    "unlabeled": "give this icon link a text label (or aria-label): he could not tell where it leads",
                    "back": "he went back to a page he had read: mark what is new or already seen",
                    "stuck_end": "the run ended stuck here: check this page has a clear, visible way on",
-                   "stop_end": "he chose to stop reading here",
+                   "stop_end": "he stopped on this page: look at what it asked of him just before",
                    "turn": "the feeling turned here: look at what this choice led to",
                    "unsure": f"he could not choose among {len(r['choices'])} choices: say where each one leads",
                    "feeling": {"boredom": _slow(plen),
@@ -728,7 +732,7 @@ def attention_drops(rows, ending="", n=5):
                                "stuck": "no visible way on",
                                "suspicion": "the page hints at a trick it does not pay off"}.get(
                                    fmood, "his feeling slipped here: look at what this page asked of him"),
-                   }[main]
+                   }[fix_sig]
         # a page with exactly one link (Next / Begin / a chapter picture) offers no choice: «the payoff of the last
         # choice» and «unclear what the choices do» there read as noise (Second Sight turns 2, 40, 42)
         choices = r.get("choices") or []
@@ -760,6 +764,10 @@ def attention_drops(rows, ending="", n=5):
                      else "wish to read on ") + f"to {r['want']:.1f}/4 (turn {r['turn']})" + \
                 (f"; back to {rows[back]['want']:.1f} at turn {rows[back]['turn']}" if back is not None
                  else "; it did not recover before the run ended")
+        # the game's answer to the tester's press is often the clearest thing in the place (Diner Detective: «Each meal
+        # is used exactly once…» stood only in the log, v3 author report, 18.11)
+        pr = next((rows[i] for i in idx if rows[i].get("by") == "tester" and (rows[i].get("after") or "").strip()), None)
+        tester = (_plain(pr["picked"]), _cut(_no_menu(" ".join(pr["after"].split())), 200)) if pr else None
         page_title = (r.get("passage_name") or _no_menu(" ".join(r["passage"].split()))[:40]).strip()
         out.append({"turn": r["turn"], "turns": sorted({rows[i]["turn"] for i in idx}), "kind": kind,
                     "mood": f"{r['mood']} ({r['strength']})" if r["mood"] in DROP else None,
@@ -767,6 +775,7 @@ def attention_drops(rows, ending="", n=5):
                     "want": f"{r['want']:.1f}/4" if r.get("want") is not None else None,
                     "page": " ".join(r["passage"].split())[-160:], "promised": r["picked"] or "(stop)",
                     "context": _sentence(r["passage"], r["picked"]), "got": _cut(got, 200), "fix": fix,
+                    "tester": tester,
                     "score": ep["score"]})
     return out
 
@@ -834,7 +843,10 @@ def attention_lines(rows, ending):
                 lines += [f"   - {d['shape']}"]
             lines += [f"   - page: «…{d['page']}»",
                       f"   - he clicked: «{d['promised']}»" + (f" — in «{d['context']}»" if d["context"] else ""),
-                      f"   - he got: «{d['got'] or '(nothing new on the page)'}»",
+                      f"   - he got: «{d['got'] or '(nothing new on the page)'}»"]
+            if d.get("tester"):
+                lines += [f"   - the tester pressed «{d['tester'][0]}» for him; the game answered: «{d['tester'][1]}»"]
+            lines += [
                       f"   - fix: {d['fix']}"]
         lines += [""]
     return lines
@@ -899,6 +911,8 @@ def write_author_report(run):
             lines += [f"**{when} · «{_plain(d['page_title'])}»**", ""]
             if d["shape"]:
                 lines += [f"- {_end(d['shape'][0].upper() + d['shape'][1:])}"]
+            if d.get("tester"):
+                lines += [f"- The tester pressed «{d['tester'][0]}» for him; the game answered: «{d['tester'][1]}»"]
             lines += [f"- He clicked «{_plain(d['context'] or d['promised'])}» and got: "
                       f"«{_plain(d['got']) or 'nothing new'}»",
                       f"- What to try: {_end(d['fix'])}", ""]

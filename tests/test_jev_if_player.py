@@ -325,7 +325,9 @@ class Offline(unittest.TestCase):
     def test_S2_a_run_that_ends_by_his_stop_names_the_stop(self):
         w = [2.5] * 50 + [2.4, 2.3, 1.6, 1.8, 1.5]
         d = jp.attention_drops(self.wrows(w), "Jev chose to stop")
-        self.assertEqual(d[0]["fix"], "he chose to stop reading here")
+        # the stop names the place; the fix comes from the dip there, not from the stop itself (R1)
+        self.assertIn("stop_end", d[0]["signals"])
+        self.assertNotIn("stop", d[0]["fix"])
         self.assertEqual(d[0]["turns"][-1], 55)
 
     def test_S3_an_icon_link_with_no_label_gets_the_label_fix_and_is_navigation(self):
@@ -471,6 +473,44 @@ class Offline(unittest.TestCase):
         self.assertIn("not a person", text)
         for inner in ("want_fell", "page_key", "signals", "stop_end"):   # none of the harness's own words
             self.assertNotIn(inner, text)
+
+    def _author_text(self, rows, ending):
+        with tempfile.TemporaryDirectory() as d:
+            run = os.path.join(d, "g")
+            os.makedirs(run)
+            with open(os.path.join(run, "turns.jsonl"), "w", encoding="utf-8") as f:
+                f.write("\n".join(json.dumps(r) for r in rows))
+            with open(os.path.join(run, "meta.json"), "w", encoding="utf-8") as f:
+                json.dump({"url": "https://x.itch.io/the-game", "engine": "unknown HTML", "ending": ending,
+                           "end": {"liked": 40, "again": 48, "best": "nothing", "best_conf": 58, "dislikes": []},
+                           "title": ""}, f)
+            return open(jp.write_author_report(run), encoding="utf-8").read()
+
+    # a puzzle run shaped like a real Diner Detective one: interest, the tester presses Submit, the game answers with
+    # its rule, confusion follows, and the reader stops at the end (the v2/v3 author reports, 18.11)
+    PUZZLE = dict(t9={"by": "tester", "picked": "Submit answer", "mood": "confusion",
+                      "after": "Each meal is used exactly once. Two customers cannot share the same check."},
+                  t10={"mood": "confusion", "picked": "Reset pieces"},
+                  t14={"mood": "confusion"}, t15={"mood": "confusion"}, t16={"mood": "confusion", "picked": None})
+
+    def test_R1_the_readers_stop_is_never_the_fix_first(self):
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **self.PUZZLE)
+        fix_first = [l for l in self._author_text(rows, "Jev chose to stop").splitlines() if "Fix first" in l]
+        self.assertEqual(len(fix_first), 1, fix_first)
+        self.assertNotIn("chose to stop", fix_first[0])                 # an empty piece of advice for an author
+
+    def test_R1b_a_bare_stop_with_nothing_else_still_gives_advice(self):
+        rows = self.wrows([2.5] * 20)                                   # flat wish, calm feeling: only the stop
+        fix_first = [l for l in self._author_text(rows, "Jev chose to stop").splitlines() if "Fix first" in l]
+        self.assertEqual(len(fix_first), 1, fix_first)
+        self.assertNotIn("chose to stop", fix_first[0])
+        self.assertIn("look at", fix_first[0])
+
+    def test_R2_the_games_answer_to_the_testers_press_is_in_the_report(self):
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **self.PUZZLE)
+        text = self._author_text(rows, "Jev chose to stop")
+        where = text.split("## In three lines", 1)[1].split("## His wish to read on", 1)[0]   # the lines and the places
+        self.assertIn("Each meal is used exactly once", where)
 
     def test_the_section_says_the_dips_are_relative_and_gives_the_average(self):
         rows = [{"turn": t, "page_key": str(t), "picked": "On", "mood": "interest", "strength": "noticeably",
