@@ -328,7 +328,23 @@ class Offline(unittest.TestCase):
         # the stop names the place; the fix comes from the dip there, not from the stop itself (R1)
         self.assertIn("stop_end", d[0]["signals"])
         self.assertNotIn("stop", d[0]["fix"])
+        self.assertEqual(d[0]["fix"], "the payoff of the last choice let him down: what did it promise, and what did "
+                                      "he get?")                       # his named cause, «result»
         self.assertEqual(d[0]["turns"][-1], 55)
+
+    def test_S2b_a_stop_after_the_same_click_again_is_navigation_trouble(self):
+        rows = self.wrows([2.5] * 20, t19={"page_key": "x"}, t20={"page_key": "x"})   # «On» twice on one page, then stop
+        d = jp.attention_drops(rows, "Jev chose to stop")
+        self.assertIn("stop_end", d[0]["signals"])
+        self.assertIn("repeat", d[0]["signals"])
+        self.assertEqual(d[0]["kind"], "navigation")                    # the kind follows the signal the fix came from
+
+    def test_S2c_at_a_stop_the_fix_comes_from_the_strongest_other_signal(self):
+        # at the stop: feeling 9 (confusion), repeat 4, turn 3 -> the feeling's advice, a story place
+        rows = self.wrows([2.5] * 20, t19={"page_key": "x"}, t20={"page_key": "x", "mood": "confusion"})
+        d = jp.attention_drops(rows, "Jev chose to stop")
+        self.assertEqual(d[0]["fix"], "unclear what the choices do: say what each one leads to")
+        self.assertEqual(d[0]["kind"], "story")
 
     def test_S3_an_icon_link_with_no_label_gets_the_label_fix_and_is_navigation(self):
         rows = self.wrows([2.5] * 12, t5={"picked": "[unlabeled link]", "choices": ["[unlabeled link]", "x"]})
@@ -487,7 +503,7 @@ class Offline(unittest.TestCase):
             return open(jp.write_author_report(run), encoding="utf-8").read()
 
     # a puzzle run shaped like a real Diner Detective one: interest, the tester presses Submit, the game answers with
-    # its rule, confusion follows, and the reader stops at the end (the v2/v3 author reports, 18.11)
+    # its rule, confusion follows, and the reader stops at the end (Diner Detective)
     PUZZLE = dict(t9={"by": "tester", "picked": "Submit answer", "mood": "confusion",
                       "after": "Each meal is used exactly once. Two customers cannot share the same check."},
                   t10={"mood": "confusion", "picked": "Reset pieces"},
@@ -511,6 +527,13 @@ class Offline(unittest.TestCase):
         text = self._author_text(rows, "Jev chose to stop")
         where = text.split("## In three lines", 1)[1].split("## His wish to read on", 1)[0]   # the lines and the places
         self.assertIn("Each meal is used exactly once", where)
+
+    def test_R2b_a_tester_press_with_no_label_is_not_an_empty_quote(self):
+        puzzle = dict(self.PUZZLE, t9=dict(self.PUZZLE["t9"], picked=None))
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle)
+        text = self._author_text(rows, "Jev chose to stop")
+        self.assertIn("pressed «the game's button» for him", text)
+        self.assertNotIn("pressed «»", text)
 
     def test_the_section_says_the_dips_are_relative_and_gives_the_average(self):
         rows = [{"turn": t, "page_key": str(t), "picked": "On", "mood": "interest", "strength": "noticeably",

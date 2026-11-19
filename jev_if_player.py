@@ -699,11 +699,12 @@ def attention_drops(rows, ending="", n=5):
         for end_sig in ("stuck_end", "stop_end"):   # the run's end names the place, however deep the dip (Zorlok 54-56)
             if end_sig in merged:
                 main = end_sig
-        kind = "navigation" if main in NAV else "story"
         # the end names the place, but «he chose to stop» is no advice: the fix comes from what else happened there
-        # (Diner Detective: «Fix first: he chose to stop reading here», v2 author report, 18.11)
+        # (Diner Detective: «Fix first: he chose to stop reading here»). The place's kind follows the signal the fix
+        # came from: a stop after the same click again is navigation trouble, not a story dip
         fix_sig = max((s for s in merged if s != "stop_end"), key=merged.get, default=main) \
             if main == "stop_end" else main
+        kind = "navigation" if fix_sig in NAV else "story"
         plen = r.get("passage_len") or len(r["passage"])
         # the slipping feeling may sit on a neighbour of the lowest-wish turn (Underfell 42-47 printed «look here»)
         fmood = next((rows[i]["mood"] for i in idx if rows[i]["mood"] in DROP), r["mood"])
@@ -765,9 +766,10 @@ def attention_drops(rows, ending="", n=5):
                 (f"; back to {rows[back]['want']:.1f} at turn {rows[back]['turn']}" if back is not None
                  else "; it did not recover before the run ended")
         # the game's answer to the tester's press is often the clearest thing in the place (Diner Detective: «Each meal
-        # is used exactly once…» stood only in the log, v3 author report, 18.11)
+        # is used exactly once…» stood only in the log)
         pr = next((rows[i] for i in idx if rows[i].get("by") == "tester" and (rows[i].get("after") or "").strip()), None)
-        tester = (_plain(pr["picked"]), _cut(_no_menu(" ".join(pr["after"].split())), 200)) if pr else None
+        tester = (_plain(pr.get("picked") or "") or UNNAMED_BUTTON,
+                  _cut(_no_menu(" ".join(pr["after"].split())), 200)) if pr else None
         page_title = (r.get("passage_name") or _no_menu(" ".join(r["passage"].split()))[:40]).strip()
         out.append({"turn": r["turn"], "turns": sorted({rows[i]["turn"] for i in idx}), "kind": kind,
                     "mood": f"{r['mood']} ({r['strength']})" if r["mood"] in DROP else None,
@@ -780,6 +782,7 @@ def attention_drops(rows, ending="", n=5):
     return out
 
 
+UNNAMED_BUTTON = "the game's button"   # a tester press whose button had no label, never an empty «»
 MIN_DROP = 3   # below this a turn is noise (one click back to a read page), not a place where attention dropped
 
 
@@ -975,8 +978,10 @@ def write_author_report(run):
     pressed = [r for r in rows if r.get("by") == "tester"]
     if pressed:
         # the report never lets the tester's click pass as his (the promise to press Submit is the tester's, not his)
-        lines[-1:-1] = [" ".join(f"At turn {r['turn']} every answer was chosen and he turned to «{_plain(r.get('jev_picked'))}», "
-                                 f"so the tester pressed «{_plain(r['picked'])}» for him." for r in pressed)]
+        lines[-1:-1] = [" ".join(f"At turn {r['turn']} every answer was chosen and he turned to "
+                                 f"«{_plain(r.get('jev_picked') or '') or 'another link'}», so the tester pressed "
+                                 f"«{_plain(r.get('picked') or '') or UNNAMED_BUTTON}» for him."
+                                 for r in pressed)]
     p = run / "author_report.md"
     p.write_text("\n".join(lines), encoding="utf-8")
     return p
