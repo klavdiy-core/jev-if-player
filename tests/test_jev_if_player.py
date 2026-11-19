@@ -567,6 +567,41 @@ class Offline(unittest.TestCase):
         self.assertNotIn("the game answered", text)
         self.assertNotIn("«»", text)
 
+    def test_R5d_two_answered_presses_are_two_sentences(self):
+        # review: «the game answered: «First answer clue» At turn 5 ...» ran the two presses into one sentence
+        puzzle = {k: v for k, v in self.PUZZLE.items() if k != "t9"}
+        puzzle["t3"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint", "after": "First answer clue"}
+        puzzle["t5"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint", "after": "Second clue!"}
+        text = self._author_text(self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle),
+                                 "Jev chose to stop")
+        line = next(l for l in text.splitlines() if "At turn 3" in l)
+        self.assertIn("«First answer clue». At turn 5", line)            # no end mark of its own: the period after
+        self.assertIn("«Second clue!»", line)
+        self.assertNotIn("«Second clue!».", line)                       # its own end mark ends the sentence
+
+    def test_R5e_an_end_mark_inside_closing_quotes_or_brackets_needs_no_second_period(self):
+        # review: game prose often ends in dialogue: «He says: “Wrong.”».» had two end marks
+        for after in ("He says: “Wrong.”", "He says: «Wrong!»", "(You lose.)"):
+            puzzle = {k: v for k, v in self.PUZZLE.items() if k != "t9"}
+            puzzle["t3"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint", "after": after}
+            text = self._author_text(self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle),
+                                     "Jev chose to stop")
+            line = next(l for l in text.splitlines() if "At turn 3" in l)
+            self.assertIn("«%s»" % after, line)
+            self.assertNotIn("«%s»." % after, line)
+
+    def test_R5f_the_same_answer_to_another_press_is_still_said_for_this_press(self):
+        # review: «shown» compared text, so a press outside every place lost its answer when a place showed the
+        # same words from another press
+        puzzle = dict(self.PUZZLE, t9=dict(self.PUZZLE["t9"], after="Wrong."))
+        puzzle["t3"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint", "after": "Wrong."}
+        text = self._author_text(self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle),
+                                 "Jev chose to stop")
+        line = next(l for l in text.splitlines() if "At turn 3" in l)
+        turn3 = line.split("At turn 9")[0]
+        self.assertIn("the game answered: «Wrong.»", turn3)
+        self.assertEqual(text.count("«Wrong.»"), 2)                     # turn 9 once in its place, turn 3 once here
+
     def test_R2b_a_tester_press_with_no_label_is_not_an_empty_quote(self):
         puzzle = dict(self.PUZZLE, t9=dict(self.PUZZLE["t9"], picked=None))
         rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle)

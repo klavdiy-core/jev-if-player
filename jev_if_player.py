@@ -782,7 +782,7 @@ def attention_drops(rows, ending="", n=5):
         # is used exactly once…» stood only in the log)
         pr = next((rows[i] for i in idx if rows[i].get("by") == "tester" and (rows[i].get("after") or "").strip()), None)
         tester = (_plain(pr.get("picked") or "") or UNNAMED_BUTTON,
-                  _cut(_no_menu(" ".join(pr["after"].split())), 200)) if pr else None
+                  _cut(_no_menu(" ".join(pr["after"].split())), 200), pr["turn"]) if pr else None
         # the author's passage name, else the heading the page marks (unless it is the game's own, on every page),
         # else the page's first words as before (logs older than the heading)
         heading = r.get("heading") if r.get("heading") != game_heading else None
@@ -800,6 +800,11 @@ def attention_drops(rows, ending="", n=5):
 
 
 UNNAMED_BUTTON = "the game's button"   # a tester press whose button had no label, never an empty «»
+
+
+def _ends_a_sentence(text):
+    """True when the text already ends its sentence: . ! ? before any closing quotes or brackets («“Wrong.”»)."""
+    return text.rstrip("\"'”’»)]")[-1:] in (".", "!", "?")
 MIN_DROP = 3   # below this a turn is noise (one click back to a read page), not a place where attention dropped
 
 
@@ -1000,14 +1005,16 @@ def write_author_report(run):
         # the report never lets the tester's click pass as his (the promise to press Submit is the tester's, not his);
         # the game's answer goes with it unless a place above already shows it (Diner Detective: a press one turn
         # before the drop lost its answer, the clearest clue of the run)
-        shown = {d["tester"][1] for d in drops if d.get("tester")}
+        shown = {d["tester"][2] for d in drops if d.get("tester")}   # the turns whose press a place already tells
+        #                                                 (by turn, not by words: two presses can get the same answer)
         said = []
         for r in pressed:
             answer = _cut(_no_menu(" ".join((r.get("after") or "").split())), 200)
             said.append(f"At turn {r['turn']} every answer was chosen and he turned to "
                         f"«{_plain(r.get('jev_picked') or '') or 'another link'}», so the tester pressed "
                         f"«{_plain(r.get('picked') or '') or UNNAMED_BUTTON}» for him" +
-                        (f"; the game answered: «{answer}»" if answer and answer not in shown else "."))
+                        (f"; the game answered: «{answer}»" + ("" if _ends_a_sentence(answer) else ".")
+                         if answer and r["turn"] not in shown else "."))
         lines[-1:-1] = [" ".join(said)]
     p = run / "author_report.md"
     p.write_text("\n".join(lines), encoding="utf-8")
