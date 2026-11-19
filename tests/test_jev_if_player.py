@@ -540,6 +540,33 @@ class Offline(unittest.TestCase):
         where = text.split("## In three lines", 1)[1].split("## His wish to read on", 1)[0]   # the lines and the places
         self.assertIn("Each meal is used exactly once", where)
 
+    def test_R5_the_games_answer_to_a_press_outside_every_place_is_still_in_the_report(self):
+        # Diner Detective: the tester pressed Submit one turn before the drop, the game answered with its clue, and
+        # the report named the press but dropped the answer
+        puzzle = {k: v for k, v in self.PUZZLE.items() if k != "t9"}
+        puzzle["t3"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint 3 / 3",
+                        "after": "Check dietary clues: one sweet meal and one bowl without tomatoes."}
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle)
+        text = self._author_text(rows, "Jev chose to stop")
+        places = text.split("## Where his attention dropped", 1)[1].split("## His wish to read on", 1)[0]
+        self.assertNotIn("Check dietary clues", places)                 # the press is in no place: the case itself
+        self.assertEqual(text.count("Check dietary clues: one sweet meal and one bowl without tomatoes."), 1)
+        self.assertIn("the game answered: «Check dietary clues", text)
+
+    def test_R5b_an_answer_already_shown_in_a_place_is_not_repeated(self):
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **self.PUZZLE)
+        text = self._author_text(rows, "Jev chose to stop")
+        self.assertEqual(text.count("Each meal is used exactly once. Two customers cannot share the same check."), 1)
+
+    def test_R5c_a_press_the_game_did_not_answer_has_no_empty_answer(self):
+        puzzle = {k: v for k, v in self.PUZZLE.items() if k != "t9"}
+        puzzle["t3"] = {"by": "tester", "picked": "Submit answer", "jev_picked": "Hint 3 / 3", "after": "  "}
+        text = self._author_text(self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle),
+                                 "Jev chose to stop")
+        self.assertIn("so the tester pressed «Submit answer» for him.", text)
+        self.assertNotIn("the game answered", text)
+        self.assertNotIn("«»", text)
+
     def test_R2b_a_tester_press_with_no_label_is_not_an_empty_quote(self):
         puzzle = dict(self.PUZZLE, t9=dict(self.PUZZLE["t9"], picked=None))
         rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **puzzle)

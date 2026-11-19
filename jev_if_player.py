@@ -997,11 +997,18 @@ def write_author_report(run):
               ""]
     pressed = [r for r in rows if r.get("by") == "tester"]
     if pressed:
-        # the report never lets the tester's click pass as his (the promise to press Submit is the tester's, not his)
-        lines[-1:-1] = [" ".join(f"At turn {r['turn']} every answer was chosen and he turned to "
-                                 f"«{_plain(r.get('jev_picked') or '') or 'another link'}», so the tester pressed "
-                                 f"«{_plain(r.get('picked') or '') or UNNAMED_BUTTON}» for him."
-                                 for r in pressed)]
+        # the report never lets the tester's click pass as his (the promise to press Submit is the tester's, not his);
+        # the game's answer goes with it unless a place above already shows it (Diner Detective: a press one turn
+        # before the drop lost its answer, the clearest clue of the run)
+        shown = {d["tester"][1] for d in drops if d.get("tester")}
+        said = []
+        for r in pressed:
+            answer = _cut(_no_menu(" ".join((r.get("after") or "").split())), 200)
+            said.append(f"At turn {r['turn']} every answer was chosen and he turned to "
+                        f"«{_plain(r.get('jev_picked') or '') or 'another link'}», so the tester pressed "
+                        f"«{_plain(r.get('picked') or '') or UNNAMED_BUTTON}» for him" +
+                        (f"; the game answered: «{answer}»" if answer and answer not in shown else "."))
+        lines[-1:-1] = [" ".join(said)]
     p = run / "author_report.md"
     p.write_text("\n".join(lines), encoding="utf-8")
     return p
