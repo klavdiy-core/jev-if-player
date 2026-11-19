@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>A puzzle opens in a dialog under a header bar</title></head>
+<body>
+<!-- Diner Detective shape (its play.js): a header bar with a date and a «Sound off» button, the puzzle in an open
+dialog whose header is a small tag line, the scene's <h2> and a close «×». The place in a report is the scene
+(«The mixed-up checks»), never the screen top («01 / A SMALL FAVOR The mixed-up checks ×»). -->
+<main id="game">
+  <div class="top-actions"><span class="shift-label">OCT 17, 1998 NIGHT SHIFT</span><button id="sound">Sound off</button></div>
+  <h1 id="room-title">After the last customer.</h1>
+</main>
+<dialog open>
+  <div class="modal-header"><div><span class="eyebrow">01 / A SMALL FAVOR</span><h2 id="modal-title">The mixed-up checks</h2></div><button class="close">×</button></div>
+  <div class="puzzle-body">
+    <p>JUNE</p>
+    <p>“Four regulars, four suppers, and a gust of wind through my order slips. Help me put these back?”</p>
+    <h3>The puzzle</h3>
+    <p>Give each customer one different meal. Each meal is used once.</p>
+    <button onclick="this.textContent='Reset done'">Reset pieces</button>
+    <button>Table talk</button>
+  </div>
+</dialog>
+</body></html>

@@ -146,7 +146,17 @@ READ_JS = r"""
                 || (document.querySelector('tw-passage') && document.querySelector('tw-passage').getAttribute('name'))
                 || (window.Harlowe && Harlowe.API_ACCESS && Harlowe.API_ACCESS.STATE && Harlowe.API_ACCESS.STATE.passage)
                 || null; } catch (err) { pname = null; }
-  return JSON.stringify({title: document.title, passage_name: pname,
+  // the scene's own heading, as the page marks it: Diner Detective puts «01 / A SMALL FAVOR» in a span and the scene
+  // in <h2>; the text alone read «01 / A SMALL FAVOR The mixed-up checks ×» for every place in the report
+  // not the site's or the game's own header (an ink export keeps «<div class=header><h1>Title</h1>» in #story); of the
+  // highest level on the page, the LAST: a story that keeps earlier scenes above has the current one at the bottom,
+  // and a dialog's «The puzzle» <h3> under its <h2> is a part of the scene, not the scene
+  const hs = [...(dialog || story).querySelectorAll('h1, h2, h3')].filter(e => vis(e)
+    && !e.closest('#ui-bar, tw-sidebar, nav, header, footer, .menu, #menu, .header'));
+  const hTop = hs.length ? Math.min(...hs.map(e => +e.tagName[1])) : 0;
+  const hEl = hs.filter(e => +e.tagName[1] === hTop).pop();
+  const heading = hEl ? (hEl.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null : null;
+  return JSON.stringify({title: document.title, passage_name: pname, heading: heading,
                          text: shownText.replace(/\n{3,}/g, '\n\n').trim().slice(0, 6000),
                          choices: out.map(x => x.t),
                          submit_ready: ready ? {choice: sub.t, answers: states.join(' · ')} : null,
@@ -470,7 +480,8 @@ def play(url, name, turns=40, out=OUT, chooser=None, ender=None, tab=None, log=p
             row = {"turn": t, "page_key": str(hash(key)), "passage": page["text"][-1200:], "choices": page["choices"],
                    "picked": None if idx is None else page["choices"][idx], "mood": mood, "strength": level,
                    "cause": cause, "confidence": conf, "at": time.strftime("%H:%M:%S"), "passage_len": len(page["text"]),
-                   "want": want, "passage_name": page.get("passage_name"), "cause_conf": cause_conf}
+                   "want": want, "passage_name": page.get("passage_name"), "heading": page.get("heading"),
+                   "cause_conf": cause_conf}
             if by:
                 row["by"], row["jev_picked"] = by, jev_picked
             if page.get("submit_unclear"):
@@ -669,6 +680,8 @@ def attention_drops(rows, ending="", n=5):
     clicked (with the sentence around a one-word link) and what he got, and a fix chosen by the strongest signal —
     for a story dip by Jev's own named cause."""
     stats = want_stats(rows)
+    heads = {r.get("heading") for r in rows}
+    game_heading = next(iter(heads)) if len(rows) > 1 and len(heads) == 1 else None   # the same on every page: the game's
     sigs = _signals(rows, ending, stats)
     scored = sorted(((sum(s.values()), i) for i, s in enumerate(sigs) if s), key=lambda x: (-x[0], x[1]))
     episodes = []
@@ -770,7 +783,11 @@ def attention_drops(rows, ending="", n=5):
         pr = next((rows[i] for i in idx if rows[i].get("by") == "tester" and (rows[i].get("after") or "").strip()), None)
         tester = (_plain(pr.get("picked") or "") or UNNAMED_BUTTON,
                   _cut(_no_menu(" ".join(pr["after"].split())), 200)) if pr else None
-        page_title = (r.get("passage_name") or _no_menu(" ".join(r["passage"].split()))[:40]).strip()
+        # the author's passage name, else the heading the page marks (unless it is the game's own, on every page),
+        # else the page's first words as before (logs older than the heading)
+        heading = r.get("heading") if r.get("heading") != game_heading else None
+        page_title = (r.get("passage_name") or heading or
+                      _no_menu(" ".join(r["passage"].split()))[:40]).strip()
         out.append({"turn": r["turn"], "turns": sorted({rows[i]["turn"] for i in idx}), "kind": kind,
                     "mood": f"{r['mood']} ({r['strength']})" if r["mood"] in DROP else None,
                     "signals": sorted(merged), "shape": shape, "page_title": page_title,

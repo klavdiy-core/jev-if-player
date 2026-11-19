@@ -220,6 +220,18 @@ class EndToEnd(unittest.TestCase):
             self.assertNotIn("A SMALL FAVOR", turns[0]["after"])                 # not the page's top
             self.assertIn("June waits for you to ask", turns[0]["after_gone"])   # and what the click replaced
 
+    def test_R4_the_log_keeps_the_scenes_heading_not_the_screen_top(self):
+        with tempfile.TemporaryDirectory() as d:
+            jp.play(os.path.join(HERE, "scene_heading.html"), "scene", turns=1, out=d, chooser=first_choice,
+                    ender=ender, log=lambda *_: None)
+            turns = [json.loads(x) for x in open(os.path.join(d, "scene", "turns.jsonl"), encoding="utf-8")]
+        self.assertEqual(turns[0]["heading"], "The mixed-up checks")       # the dialog's h2, not its tag line or «×»
+        with tempfile.TemporaryDirectory() as d:
+            jp.play(os.path.join(HERE, "ink_story.html"), "ink", turns=1, out=d, chooser=first_choice,
+                    ender=ender, log=lambda *_: None)
+            turns = [json.loads(x) for x in open(os.path.join(d, "ink", "turns.jsonl"), encoding="utf-8")]
+        self.assertEqual(turns[0]["heading"], "The Attic")     # not the game's title, the first scene, or the h3 under it
+
     def test_with_a_list_still_open_the_tester_never_presses_for_him(self):
         def always_hint(state, choices, may_stop=True):
             return choices.index("Hint"), "interest", "noticeably", "text", 0.9
@@ -545,6 +557,33 @@ class Offline(unittest.TestCase):
         self.assertNotIn("«»", text)                                    # the three lines had «got «»»
         self.assertIn("he stopped reading on this page", top)
         self.assertIn("- He stopped reading on this page.", text)
+
+    # the top of a Diner Detective page as the log holds it: chapter, scene, a close icon, a name, then the scene itself
+    DINER_TOP = ("01 / A SMALL FAVOR\nThe mixed-up checks\n×\nJUNE\n\n"
+                 "“Four regulars, four suppers, and a gust of wind through my order slips. Help me put these back?”\n\n"
+                 "The puzzle\nGive each customer one different meal. Each meal is used once.")
+
+    def test_R4_a_place_is_named_by_its_scene_not_the_screen_header(self):
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **self.PUZZLE)
+        for r in rows:
+            r["passage"] = self.DINER_TOP
+        old = jp.attention_drops(rows, "Jev chose to stop")
+        self.assertTrue(old)
+        # a log without headings (older runs) keeps the page's first words, as before
+        self.assertEqual({x["page_title"] for x in old}, {"01 / A SMALL FAVOR The mixed-up checks ×"})
+        # the heading the page marks names the place (the title page had its own)
+        rows[0]["heading"] = "THE LAST TABLE."
+        for r in rows[1:]:
+            r["heading"] = "The mixed-up checks"
+        self.assertEqual({x["page_title"] for x in jp.attention_drops(rows, "Jev chose to stop")}, {"The mixed-up checks"})
+        # a heading on every page of the run is the game's own (an ink title, a site name): not a scene
+        rows[0]["heading"] = "The mixed-up checks"
+        self.assertEqual({x["page_title"] for x in jp.attention_drops(rows, "Jev chose to stop")},
+                         {"01 / A SMALL FAVOR The mixed-up checks ×"})
+        # the author's own passage name still wins
+        rows[0]["heading"] = "THE LAST TABLE."
+        rows[15]["passage_name"] = "checks_puzzle"
+        self.assertIn("checks_puzzle", {x["page_title"] for x in jp.attention_drops(rows, "Jev chose to stop")})
 
     def test_the_section_says_the_dips_are_relative_and_gives_the_average(self):
         rows = [{"turn": t, "page_key": str(t), "picked": "On", "mood": "interest", "strength": "noticeably",
