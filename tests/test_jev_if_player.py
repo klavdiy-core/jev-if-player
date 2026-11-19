@@ -534,6 +534,8 @@ class Offline(unittest.TestCase):
         text = self._author_text(rows, "Jev chose to stop")
         self.assertIn("pressed «the game's button» for him", text)
         self.assertNotIn("pressed «»", text)
+        self.assertIn("turned to «another link»", text)                # his own pick was not recorded either
+        self.assertNotIn("turned to «»", text)
 
     def test_the_section_says_the_dips_are_relative_and_gives_the_average(self):
         rows = [{"turn": t, "page_key": str(t), "picked": "On", "mood": "interest", "strength": "noticeably",
