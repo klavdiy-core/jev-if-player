@@ -537,6 +537,15 @@ class Offline(unittest.TestCase):
         self.assertIn("turned to «another link»", text)                # his own pick was not recorded either
         self.assertNotIn("turned to «»", text)
 
+    def test_R3_a_stop_reads_as_a_stop_not_a_click_on_stop_and_never_an_empty_quote(self):
+        rows = self.wrows([2.3] * 8 + [2.2, 2.06] + [2.3] * 3 + [2.1, 2.1, 2.07], **self.PUZZLE)
+        text = self._author_text(rows, "Jev chose to stop")
+        top = text.split("## Where his attention dropped")[0]
+        self.assertNotIn("«(stop)»", text)                              # he pressed nothing at a stop
+        self.assertNotIn("«»", text)                                    # the three lines had «got «»»
+        self.assertIn("he stopped reading on this page", top)
+        self.assertIn("- He stopped reading on this page.", text)
+
     def test_the_section_says_the_dips_are_relative_and_gives_the_average(self):
         rows = [{"turn": t, "page_key": str(t), "picked": "On", "mood": "interest", "strength": "noticeably",
                  "choices": ["On"], "passage": f"page {t}", "confidence": 0.9, "want": w}

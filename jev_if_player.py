@@ -775,7 +775,7 @@ def attention_drops(rows, ending="", n=5):
                     "mood": f"{r['mood']} ({r['strength']})" if r["mood"] in DROP else None,
                     "signals": sorted(merged), "shape": shape, "page_title": page_title,
                     "want": f"{r['want']:.1f}/4" if r.get("want") is not None else None,
-                    "page": " ".join(r["passage"].split())[-160:], "promised": r["picked"] or "(stop)",
+                    "page": " ".join(r["passage"].split())[-160:], "promised": r["picked"] or "(stop)", "stopped": not r["picked"],
                     "context": _sentence(r["passage"], r["picked"]), "got": _cut(got, 200), "fix": fix,
                     "tester": tester,
                     "score": ep["score"]})
@@ -897,8 +897,10 @@ def write_author_report(run):
         d = story[0]
         lines += [f"2. Attention dropped most around turn {d['turns'][0]}" +
                   (f"-{d['turns'][-1]}" if len(d["turns"]) > 1 else "") +
-                  f" («{_plain(d['page_title'])}»): he clicked «{_plain(d['context'] or d['promised'])}» and got "
-                  f"«{_plain(_cut(d['got'], 110))}»."]
+                  f" («{_plain(d['page_title'])}»): " +
+                  ("he stopped reading on this page." if d.get("stopped") else
+                   f"he clicked «{_plain(d['context'] or d['promised'])}» and got "
+                   f"«{_plain(_cut(d['got'], 110)) or 'nothing new'}».")]
         lines += [f"3. Fix first: {_end(d['fix'])}"]
     elif nav:
         lines += [f"2. The story held him; the trouble was the page itself around turn {nav[0]['turns'][0]}.",
@@ -916,7 +918,8 @@ def write_author_report(run):
                 lines += [f"- {_end(d['shape'][0].upper() + d['shape'][1:])}"]
             if d.get("tester"):
                 lines += [f"- The tester pressed «{d['tester'][0]}» for him; the game answered: «{d['tester'][1]}»"]
-            lines += [f"- He clicked «{_plain(d['context'] or d['promised'])}» and got: "
+            lines += ["- He stopped reading on this page." if d.get("stopped") else
+                      f"- He clicked «{_plain(d['context'] or d['promised'])}» and got: "
                       f"«{_plain(d['got']) or 'nothing new'}»",
                       f"- What to try: {_end(d['fix'])}", ""]
     else:
